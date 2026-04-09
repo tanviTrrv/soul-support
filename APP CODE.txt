@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Planner 🌸</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #fbcfe8, #e9d5ff, #fce7f3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+/* Glass Card */
+.card {
+  background: rgba(255,255,255,0.3);
+  backdrop-filter: blur(10px);
+  padding: 25px;
+  border-radius: 20px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  width: 320px;
+}
+
+h1 {
+  text-align: center;
+  color: #db2777;
+}
+
+p {
+  text-align: center;
+  color: #555;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+button {
+  margin-top: 10px;
+  padding: 10px;
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  background: #f472b6;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #ec4899;
+}
+
+.dashboard {
+  width: 800px;
+}
+
+.grid {
+  display: flex;
+  gap: 20px;
+}
+
+.box {
+  flex: 1;
+  background: rgba(255,255,255,0.4);
+  padding: 15px;
+  border-radius: 15px;
+}
+
+.task {
+  background: white;
+  padding: 8px;
+  margin-top: 10px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.done {
+  text-decoration: line-through;
+  color: gray;
+}
+
+.timer {
+  font-size: 30px;
+  text-align: center;
+  margin: 10px 0;
+}
+</style>
+</head>
+
+<body>
+
+<div id="app"></div>
+
+<script>
+let user = null;
+let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+let time = 1500;
+let running = false;
+let timer;
+
+// RENDER FUNCTION
+function render() {
+  const app = document.getElementById("app");
+
+  if (!user) {
+    app.innerHTML = `
+      <div class="card">
+        <h1>Study Planner 🌸</h1>
+        <p>Plan Smart, Study Better</p>
+
+        <input id="email" placeholder="Email">
+        <input id="password" type="password" placeholder="Password">
+
+        <button onclick="login()">Login</button>
+      </div>
+    `;
+  } else {
+    app.innerHTML = `
+      <div class="dashboard">
+        <h1>Hello, Student 🌸</h1>
+
+        <div class="grid">
+
+          <div class="box">
+            <h3>📋 Tasks</h3>
+
+            <input id="taskInput" placeholder="Add task...">
+            <button onclick="addTask()">Add</button>
+
+            <div id="taskList"></div>
+          </div>
+
+          <div class="box">
+            <h3>⏳ Focus Mode</h3>
+
+            <div class="timer" id="timer"></div>
+
+            <button onclick="toggleTimer()">Start/Pause</button>
+            <button onclick="resetTimer()">Reset</button>
+          </div>
+
+        </div>
+      </div>
+    `;
+
+    updateTasks();
+    updateTimer();
+  }
+}
+
+// LOGIN
+function login() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  if (email && password) {
+    user = true;
+    render();
+  }
+}
+
+// TASKS
+function addTask() {
+  const input = document.getElementById("taskInput");
+  if (input.value.trim()) {
+    tasks.push({ text: input.value, done: false });
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+    input.value = "";
+    updateTasks();
+  }
+}
+
+function updateTasks() {
+  const list = document.getElementById("taskList");
+  list.innerHTML = "";
+
+  tasks.forEach((t, i) => {
+    const div = document.createElement("div");
+    div.className = "task";
+
+    div.innerHTML = `
+      <span class="${t.done ? 'done' : ''}" onclick="toggleTask(${i})">${t.text}</span>
+      <span onclick="deleteTask(${i})">❌</span>
+    `;
+
+    list.appendChild(div);
+  });
+}
+
+function toggleTask(i) {
+  tasks[i].done = !tasks[i].done;
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+  updateTasks();
+}
+
+function deleteTask(i) {
+  tasks.splice(i, 1);
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+  updateTasks();
+}
+
+// TIMER
+function updateTimer() {
+  const min = Math.floor(time / 60);
+  const sec = time % 60;
+  document.getElementById("timer").innerText =
+    `${min}:${sec < 10 ? '0' : ''}${sec}`;
+}
+
+function toggleTimer() {
+  running = !running;
+
+  if (running) {
+    timer = setInterval(() => {
+      if (time > 0) {
+        time--;
+        updateTimer();
+      }
+    }, 1000);
+  } else {
+    clearInterval(timer);
+  }
+}
+
+function resetTimer() {
+  time = 1500;
+  clearInterval(timer);
+  running = false;
+  updateTimer();
+}
+
+// INIT
+render();
+</script>
+
+</body>
+</html>
